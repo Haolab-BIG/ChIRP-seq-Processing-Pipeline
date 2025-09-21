@@ -97,15 +97,16 @@ The workflow is fully containerized using Singularity, including all required to
         basementdir=/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data
         cd $basementdir
 
-        # Download repeats from UCSC Table Browser (Repeats --> Genome)
-        gunzip $basementdir/repeats.hg38.fa.gz
+        # Download repeats from UCSC Table Browser and move to $basementdir (as shown in followed picture)
+        singularity exec --cleanenv ChIRPseq.sif gunzip $basementdir/repeats.hg38.fa.gz
 
         # Remove spaces from headers to avoid duplicate names
-        awk '/^>/{gsub(/ /,"_"); print; next} {print}' repeats.hg38.fa > repeats.hg38.unique.fa
-
+        singularity exec --cleanenv ChIRPseq.sif awk '/^>/{gsub(/ /,"_"); print; next} {print}' repeats.hg38.fa > repeats.hg38.unique.fa
+        singularity exec --cleanenv ChIRPseq.sif rm repeats.hg38.fa
+        
         # Build Bowtie2 index for repeats
-        mkdir -p ${basementdir}/hg38_repeats
-        bowtie2-build --threads 8 -f ${basementdir}/repeats.hg38.unique.fa ${basementdir}/hg38_repeats/bowtie2_inde
+        singularity exec --cleanenv ChIRPseq.sif mkdir -p ${basementdir}/hg38_repeats
+        singularity exec --cleanenv ChIRPseq.sif bowtie2-build --threads 8 -f ${basementdir}/repeats.hg38.unique.fa ${basementdir}/hg38_repeats/bowtie2_index
         ```
       
         <img width="806" height="589" alt="图片" src="https://github.com/user-attachments/assets/bd554377-e831-4532-9911-61773c4ed0fd" />
@@ -116,31 +117,32 @@ The workflow is fully containerized using Singularity, including all required to
         cd basement_data
 
         # Download Genome FASTA
-        wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/GRCh38.primary_assembly.genome.fa.gz
+        singularity exec --cleanenv ChIRPseq.sif wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/GRCh38.primary_assembly.genome.fa.gz
 
         # Unzip the files
-        gunzip GRCh38.primary_assembly.genome.fa.gz
-        gunzip gencode.v46.primary_assembly.annotation.gtf.gz
+        singularity exec --cleanenv ChIRPseq.sif gunzip GRCh38.primary_assembly.genome.fa.gz
+        singularity exec --cleanenv ChIRPseq.sif gunzip gencode.v46.primary_assembly.annotation.gtf.gz
 
         # Remove scafford
-        awk '/^>/ {p=0} /^>chr[0-9XYM]/ {p=1} p' GRCh38.primary_assembly.genome.fa > GRCh38.primary_assembly.genome.chr.fa
+        singularity exec --cleanenv ChIRPseq.sif awk '/^>/ {p=0} /^>chr[0-9XYM]/ {p=1} p' GRCh38.primary_assembly.genome.fa > GRCh38.primary_assembly.genome.chr.fa
 
         # Build index
-        mkdir hg38
-        singularity exec --cleanenv End-seq.sif bowtie2-build --threads 8 -f GRCh38.primary_assembly.genome.chr.fa ./hg38/bowtie2_index
+        singularity exec --cleanenv ChIRPseq.sif mkdir hg38
+        singularity exec --cleanenv ChIRPseq.sif bowtie2-build --threads 8 -f GRCh38.primary_assembly.genome.chr.fa ./hg38/bowtie2_index
 
         # get chromatin size (only used when you select SEACR as the peak calling method)
-        samtools faidx GRCh38.primary_assembly.genome.chr.fa
-        cut -f1,2 GRCh38.primary_assembly.genome.chr.fa.fai > chromatin.size
+        singularity exec --cleanenv ChIRPseq.sif samtools faidx GRCh38.primary_assembly.genome.chr.fa
+        singularity exec --cleanenv ChIRPseq.sif cut -f1,2 GRCh38.primary_assembly.genome.chr.fa.fai > chromatin.size
 
         # Remove unnecessary files
-        rm GRCh38.primary_assembly.genome.chr.fa
-        rm GRCh38.primary_assembly.genome.fa
+        singularity exec --cleanenv ChIRPseq.sif rm GRCh38.primary_assembly.genome.chr.fa
+        singularity exec --cleanenv ChIRPseq.sif rm GRCh38.primary_assembly.genome.fa
         ```
 
 5.   **Required File Structure**
       ```bash
       basement_data/
+      ├── ChIRPseq.sif
       ├── hg38/
             ├── bowtie2_index.1.bt2
             ├── bowtie2_index.2.bt2
@@ -148,10 +150,317 @@ The workflow is fully containerized using Singularity, including all required to
             ├── bowtie2_index.4.bt2
             ├── bowtie2_index.rev.1.bt2
             └── bowtie2_index.rev.2.bt2
-      ├── chromatin.size
-      ├── Comparison.txt
-      ├── DNAProteinSeq.sif
+      ├── hg38_repeats/
+            ├── bowtie2_index.1.bt2
+            ├── bowtie2_index.2.bt2
+            ├── bowtie2_index.3.bt2
+            ├── bowtie2_index.4.bt2
+            ├── bowtie2_index.rev.1.bt2
+            └── bowtie2_index.rev.2.bt2
       ├── illumina_adapter.fa
-      ├── run_DNAProteinSeq.sh
-      └── SampleInfor.txt
+      ├── run_ChIRPseq.sh
+      └── repeats.hg38.unique.fa
       ```
+
+# Part III Running
+
+   * **Example code for ChIRP-seq**
+
+      ```bash
+      bash ./basement_data/run_ChIRPseq.sh \
+                --oddFq /path_to_rawdata/HeLa_Terc_odd.fastq.gz \
+                --evenFq /path_to_rawdata/HeLa_Terc_even.fastq.gz \
+                --inputFq /path_to_rawdata/HeLa_Terc_input.fastq.gz \
+                --prefix HeLa_Terc \
+                --outputdir ./result \
+                --repeatIndex ./basement_data/hg38_repeats/bowtie2_index \
+                --genomeIndex ./basement_data/hg38/bowtie2_index \
+                --adapterFa ./basement_data/illumina_adapter.fa \
+                --sif ./basement_data/DNAProteinSeq.sif \
+                --threads 8 \
+                --binSize 10 --g hs
+      ```
+      
+   * **Command Parameters**
+
+      - `--evenFq`:             (required) The path(s) to the even FASTQ file(s)
+      - `--oddFq`:              (required) The path(s) to the odd FASTQ file(s)
+      - `--inputFq`:            (optinal) The path(s) to the input FASTQ file(s)
+      - `--prefix`:             (optinal) A prefix name of output files()
+      - `--outputdir`:          (required) Path to the directory where the output will be stored
+      - `--repeatIndex`:        (required) Path to the directory where bowtie reference build with prefix
+      - `--genomeIndex`:        (required) Path to the directory where bowtie reference build with prefix
+      - `--adapterFa`:          (required) Path to the adapter fasta
+      - `--sif`:                (required) Path to the singularity environment file
+      - `--threads`:            (optional) Number of threads to use (default: 8)
+      - `--binSize`:            (optional) Number of binsize to use (default: 10)
+      - `--peakcalling`:        (optional) Number of binsize to use (default: 10)
+      - `--g`:                  (optional) provide the species code accepted by MACS3, for example: `hs` (human), `mm` (mouse), `ce` (C. elegans), `dm` (Drosophila melanogaster), etc.
+      - `--peaktype`:           (optional) For MACS3, set `broad` or `narrow` (default: `narrow`)
+      - `--pval`:               (optional) For MACS3, P-value cutoff for peak calling to determine significance of narrow/strong peaks. If specified, MACS3 uses p-value instead of q-value
+      - `--qval`:               (optional) For MACS3, Q-value (FDR) cutoff for narrow/strong peaks, controlling false discovery rate (default: 0.01)
+      - `--broad_cutoff`:       (optional) For MACS3, P-value or q-value cutoff for broad/weak peaks, effective only when `--peaktype` is `broad` (default: 0.1)
+      - `--llocal`:             (optional) For MACS3, `--llocal` value for samples without input control (default: 100000)
+      - `--keepdup`:            (optional) For MACS3, `--keep-dup` setting (default: `all`)
+      - `--nomodel`:            (optional) For MACS3, Disable model building, set `on` or `off` (default: `on`)
+      - `--nolambda`:           (optional) For MACS3, Disable dynamic lambda, set `on` or `off` (default: `on`)
+      - `--callsummits`:        (optional) For MACS3, Enable calling of peak summits within enriched regions, set `on` or `off` (default: `on`)
+      - `--extsize_val`:        (optional) For MACS3, Set fragment/extension size for MACS3 in base pairs, effective only when `--nomodel` is `on`
+      - `--shift_val`:          (optional) For MACS3, Set shift for read 5' ends in base pairs for MACS3, effective only when `--nomodel` is `on`; positive moves 5'->3', negative moves 3'->5'
+
+# Part IV Output
+
+   * **Output Structure with MACS3**
+      ```bash
+      result_chip_histone /
+      ├── bam/
+            ├── HeLa_Terc.even.bowtie.stats
+            ├── HeLa_Terc.even.DeDup.bam
+            ├── HeLa_Terc.even.DeDup.bam.bai
+            ├── HeLa_Terc.even.flagstat.txt
+            ├── HeLa_Terc.even.markdup.log
+            ├── HeLa_Terc.even.repeats.bowtie.stats
+            ├── HeLa_Terc.even_repeat.bam
+            ├── HeLa_Terc.input.bowtie.stats
+            ├── HeLa_Terc.input.DeDup.bam
+            ├── HeLa_Terc.input.DeDup.bam.bai
+            ├── HeLa_Terc.input.flagstat.txt
+            ├── HeLa_Terc.input.markdup.log
+            ├── HeLa_Terc.input.repeats.bowtie.stats
+            ├── HeLa_Terc.input_repeat.bam
+            ├── HeLa_Terc.odd.bowtie.stats
+            ├── HeLa_Terc.odd.DeDup.bam
+            ├── HeLa_Terc.odd.DeDup.bam.bai
+            ├── HeLa_Terc.odd.flagstat.txt
+            ├── HeLa_Terc.odd.markdup.log
+            ├── HeLa_Terc.odd.repeats.bowtie.stats
+            └── HeLa_Terc.odd_repeat.bam
+      ├── bw/
+            ├── HeLa_Terc.even.DeDup.bw
+            ├── HeLa_Terc.input.DeDup.bw
+            ├── HeLa_Terc.merged.DeDup.bw
+            └── HeLa_Terc.odd.DeDup.bw
+      ├── figure/
+            ├── HeLa_Terc.peak.pdf
+            ├── fingerprints.pdf
+            ├── BW_compare_PCA.pdf
+            └── BW_compare_cor.pdf
+      ├── peak/
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input.macs3.stats
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.narrowPeak
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.xls
+            └── HeLa_Terc.merged.vs.HeLa_Terc.input_summits.bed
+      ├── multiqc/
+            ├── multiqc_data/
+            └── multiqc_report.html
+      ```
+
+   * **Output Interpretation**
+
+      - **`*.bowtie.stats`**
+
+        - **Content**: Contains Bowtie alignment summary statistics, including the total number of reads processed, reads aligned, reads discarded, and uniquely mapped reads. It provides an overview of mapping quality and efficiency for each FASTQ file.
+        - **Application**: Used to assess alignment quality and sequencing library performance. These statistics help in troubleshooting mapping issues, evaluating experiment success, and can be parsed by downstream tools like MultiQC for visualization and comparison across samples.
+          
+          <img width="410" height="253" alt="图片" src="https://github.com/user-attachments/assets/958fa19a-a967-4424-8c91-2df3d6a18511" />
+
+      - **`*.DeDup.bam`**
+
+        - **Content**: This is the main alignment file in Binary Alignment Map (BAM) format. It contains all the sequencing reads and their mapping coordinates on the reference genome. This version has had duplicate reads (PCR duplicates) removed. For more information please refer to: https://genome.ucsc.edu/goldenpath/help/bam.html.
+        - **Application**: It's the primary evidence for read alignment and can be used for detailed inspection in genome browsers or for downstream analyses.
+
+      - **`*.dedup.bam.bai`**
+
+        - **Content**: This is the index file for the BAM file.
+        - **Application**: It allows for fast random access to the BAM file, which is essential for visualization software (like IGV) to quickly load and display alignments for a specific genomic region without reading the entire file.
+
+      - **`*.bw`**
+
+        - **Content**: A BigWig file that represents the End-seq signal coverage across the genome. It shows the read density (how many reads cover each position) in a compressed format. For more information please refer to: https://genome.ucsc.edu/goldenpath/help/bigWig.html
+        - **Application**: Primarily used for visualization. You can load this file into a genome browser (e.g., IGV, UCSC Genome Browser) to see a "signal track" that shows gene expression levels visually across chromosomes.
+
+      - **`*.dedup.bam.bai`**
+
+        - **Content**: This is the index file for the BAM file.
+        - **Application**: It allows for fast random access to the BAM file, which is essential for visualization software (like IGV) to quickly load and display alignments for a specific genomic region without reading the entire file.
+
+      - **`*.flagstat.txt`**
+
+        - **Content**: Contains alignment statistics generated by samtools flagstat after removing duplicate reads. It reports the total number of reads, mapped reads, properly paired reads, singletons, and the number of duplicate reads removed, providing a summary of the final, deduplicated BAM file.
+        - **Application**: Used to evaluate the quality of the deduplicated alignment, check library complexity, and ensure that downstream analyses (e.g., peak calling, coverage calculation) are based on high-quality, non-redundant reads.
+
+          <img width="405" height="329" alt="图片" src="https://github.com/user-attachments/assets/27893e2a-f8ff-43c3-a234-b297f50f0fad" />
+
+      - **`*.markdup.log`**
+
+        - **Content**: Log file generated by `samtools markdup`, summarizing read duplication. It includes READ (total number of input reads), WRITTEN (reads retained after removing duplicates), EXCLUDED, EXAMINED, counts of PAIRED and SINGLE reads, as well as DUPLICATE SINGLE/PAIR and DUPLICATE TOTAL.
+        - **Application**: Used to evaluate library complexity and duplication rate. A high WRITTEN/READ ratio indicates low duplication and good library complexity, while a low ratio suggests high PCR duplication or low-complexity sequencing.
+        
+		  <img width="318" height="104" alt="图片" src="https://github.com/user-attachments/assets/938f588d-b04b-4aa8-aa58-97fcc8aa5a39" />
+
+      - **`multiqc_report`** : Open multiqc_report.html in a web browser to explore all sections interactively.
+
+        - **General Statistics**: A combined table summarizing important metrics for each sample:
+	  
+          <img width="1604" height="600" alt="图片" src="https://github.com/user-attachments/assets/ecde9e5e-17e7-404c-b85d-c3d9836c200b" />
+
+        - **FastQC**: Quality-control metrics on raw and trimmed reads, including 'Sequence Counts', 'Sequence Quality Histograms', 'Per Sequence Quality Scores', 'Per Base Sequence Content', 'Per Sequence GC Content', 'Per Base N Content', 'Sequence Length Distribution', 'Sequence Duplication Levels', 'Overrepresented sequences by sample', 'Top overrepresented sequences', 'Adapter Content':
+    
+          - Sequence counts for each sample. Estimate duplicate read counts:
+
+            <img width="1595" height="557" alt="图片" src="https://github.com/user-attachments/assets/594acb6e-313c-4661-909b-bea2624e133b" />
+
+          - Sequence Quality Histograms: The mean quality value across each base position in the read.
+	  
+            <img width="1601" height="612" alt="图片" src="https://github.com/user-attachments/assets/67f69cb2-1401-461c-850a-a40f397cbc0e" />
+
+          - Adapter Content: The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.
+	  
+            <img width="1593" height="620" alt="图片" src="https://github.com/user-attachments/assets/20120b8e-675a-4f0c-be5c-8bc1dc34feac" />
+
+        - **Samtools**: This module parses the output from samtools flagstat to report the percentage of total, mapped, and properly paired reads, providing a summary of alignment quality. Helps evaluate the effectiveness of deduplication and ensures that downstream analyses (e.g., peak calling, coverage profiling) are based on unique, non-redundant reads.
+	  
+          <img width="1634" height="779" alt="图片" src="https://github.com/user-attachments/assets/08f72013-30ee-4007-9dee-ea025246b8e9" />
+
+          <img width="1626" height="781" alt="图片" src="https://github.com/user-attachments/assets/4bf9b33c-2ac4-49a7-bf77-2c0e6948e061" />
+
+        - **Bowtie**: Alignment statistics such as total reads, uniquely mapped reads, and multi-mapping rates:
+	  
+          <img width="1625" height="507" alt="图片" src="https://github.com/user-attachments/assets/8da0c8a1-7efb-41b5-b47f-641df258307a" />
+
+      - **`*BW_compare_PCA.pdf`**
+
+        - **Content**: PDF file showing the principal component analysis (PCA) of BigWig signal profiles across multiple samples. It visualizes sample-to-sample similarity and variance based on genome-wide coverage or signal intensities.
+        - **Application**: Used to assess the overall relationship between samples, detect outliers, and evaluate batch effects or experimental reproducibility.
+
+          <img width="707" height="705" alt="图片" src="https://github.com/user-attachments/assets/e1ed3bc8-d562-4dfd-bf8b-43d64fca4971" />
+
+      - **`*BW_compare_cor.pdf`**
+
+        - **Content**: PDF file showing a heatmap of pairwise correlations between samples based on BigWig signal profiles. It typically includes correlation values (Pearson) and visually represents sample similarity across the genome.
+        - **Application**: Used to assess consistency and reproducibility between samples, identify outliers, and evaluate experimental quality in End-seq.
+
+          <img width="714" height="660" alt="图片" src="https://github.com/user-attachments/assets/9beacc3e-35bc-4315-8316-2708de675170" />
+
+      - **`*fingerprints.pdf`**
+
+        - **Content**: PDF file generated by `plotFingerprint` showing the cumulative read coverage across the genome for each BAM file. It visualizes enrichment patterns and sequencing depth consistency among samples.
+        - **Application**: In the fingerprint plot, a larger separation between treatment and control curves, indicates stronger enrichment and higher signal-to-noise ratio. Also, the fingerprint plot can help decide whether to call narrow peaks or broad peaks: Narrow peaks are appropriate when the signal is sharp and localized; Broad peaks are used when the signal spans wide genomic regions with diffuse enrichment, such as histone modifications.
+
+          <img width="678" height="511" alt="图片" src="https://github.com/user-attachments/assets/9e338721-680c-452c-8d7f-cd4e4f31de14" />
+
+      - **`*..macs3.stats`**
+
+        - **Content**: Contains summary statistics from MACS3 peak calling, including number of input reads, effective genome size, estimated fragment size, number of peaks called, and other runtime information.
+        - **Application**: Used to check if MACS3 ran successfully and to detect any errors or warnings during the peak calling process.
+
+      - **`*_peaks.narrowPeak`**
+
+        - **Content**: BED6+4 format file containing peak locations along with peak summit, p-value, and q-value.  
+    Suitable for direct loading into the UCSC Genome Browser when the `--trackline` option is enabled.
+
+        - **Columns**:
+
+        | Column | Description |
+        |--------|------------|
+        | chrom  | Chromosome name |
+        | start  | Start position of the peak (0-based) |
+        | end    | End position of the peak (not inclusive) |
+        | name   | Peak name or ID |
+        | score  | Integer score for display, calculated as `int(-10*log10(pvalue))` or `int(-10*log10(qvalue))` depending on whether `-p` or `-q` was used as the cutoff. |
+        | strand | Strand information (‘+’, ‘-’, or ‘.’ if not applicable) |
+        | signalValue | Fold enrichment at the peak summit |
+        | pValue | -log10 p-value at the peak summit |
+        | qValue | -log10 q-value (FDR) at the peak summit |
+        | summit | Relative summit position to the peak start |
+
+        - **Application**: Used for quantitative peak analysis, filtering peaks by significance, fold enrichment, or integrating with downstream functional annotation, motif analysis, and visualization.
+
+          <img width="673" height="305" alt="图片" src="https://github.com/user-attachments/assets/2379edbf-596f-4832-b26d-867317443cc9" />
+
+      - **`*_peaks.broadPeak`**
+
+        - **Content**: BED6+3 format file (similar to narrowPeak, but without the 10th column for peak summits). Only available when `--broad` is enabled. In broad peak mode, the peak summit isn’t called, so the 5th, 7th–9th columns are the mean values across the peak region. Can be loaded directly into UCSC Genome Browser with `--trackline`.
+        - **Columns**:
+        | Column | Description |
+        |--------|-------------|
+        | chrom  | Chromosome name |
+        | start  | Start position of the broad peak (0-based) |
+        | end    | End position of the broad peak (not inclusive) |
+        | name   | Peak name or ID |
+        | score  | Mean score across the broad peak (similar to narrowPeak 5th column) |
+        | strand | Strand information (‘+’, ‘-’, or ‘.’ if not applicable) |
+        | signalValue | Mean enrichment signal across the peak |
+        | pValue | Mean -log10 p-value across the peak |
+        | qValue | Mean -log10 q-value (FDR) across the peak |
+
+        - **Application**: Used for quantitative peak analysis, filtering peaks by significance, fold enrichment, or integrating with downstream functional annotation, motif analysis, and visualization.
+
+          <img width="687" height="310" alt="图片" src="https://github.com/user-attachments/assets/4297588f-10b9-4093-981b-451a7fe2bf26" />
+
+      - **`*_peaks.gappedPeak`**
+
+        - **Content**: BED12+3 format file containing broad regions and narrow peaks within them. Only available when `--broad` is enabled. Can be loaded into UCSC Genome Browser. Columns 5, 7–9 may need adjustment if integrating with narrowPeak conventions.
+        - **Columns**:
+        | Column | Description |
+        |--------|-------------|
+        | chrom       | Chromosome name |
+        | start       | Start of the broad region (0-based) |
+        | end         | End of the broad region (not inclusive) |
+        | name        | Peak name or ID |
+        | score       | Score for display in UCSC browser (grey levels, similar to narrowPeak 5th column) |
+        | strand      | Strand information (‘+’, ‘-’, or ‘.’) |
+        | thickStart  | Start of the first narrow peak within the broad region |
+        | thickEnd    | End of the first narrow peak within the broad region |
+        | itemRgb     | RGB color for UCSC browser (0 uses default color) |
+        | blockCount  | Number of blocks (including 1bp at start and end of broad regions) |
+        | blockSizes  | Comma-separated lengths of each block |
+        | blockStarts | Comma-separated start positions of each block relative to `start` |
+        | foldChange  | Fold-change of enrichment within the peak |
+        | -log10(pvalue) | -log10 p-value for the peak |
+        | -log10(qvalue) | -log10 q-value (FDR) for the peak |
+
+        - **Application**: Used to analyze subpeak structure, study internal peak features, or visualize complex enrichment patterns in broad regions.
+
+          <img width="1101" height="301" alt="图片" src="https://github.com/user-attachments/assets/989f95f5-942f-4434-ab70-0b44a9333e3e" />
+
+      - **`*_peaks.xls`**
+
+        - **Content**: Tab-delimited summary of all peaks called by MACS3 with detailed metrics.
+        - **Columns**:
+        | Column | Description |
+        |--------|-------------|
+        | chr    | Chromosome name |
+        | start  | Peak start position (0-based) |
+        | end    | Peak end position (not inclusive) |
+        | length | Peak length (end - start) |
+        | pileup | Maximum pileup (number of overlapping tags) at the peak |
+        | -log10(pvalue) | -log10 of p-value for peak significance |
+        | fold_enrichment | Fold enrichment of the peak over background |
+        | -log10(qvalue) | -log10 of q-value (FDR) for peak significance |
+        | name   | Peak name or ID |
+
+        - **Application**: Used for quantitative peak analysis, filtering peaks by significance, fold enrichment, or integrating with downstream functional annotation, motif analysis, and visualization.
+
+      - **`*.peak.pdf`**
+
+        - **Content**: Heatmap visualizing read enrichment over peaks. Generated using `plotHeatmap` from deepTools with a `*_peaks.broadPeak` and `*bw` input. The heatmap shows signal intensity (color-coded, viridis colormap) across all peaks, with missing data represented in white. The height and width of the heatmap are set for clear visualization of peak patterns.
+        - **Application**: Used to assess global enrichment patterns across peaks. Peaks with strong enrichment appear as high-intensity bands or curves; if the signal is higher than control samples, it indicates that peak calling was successful and represents true biological enrichment.
+
+          example: peak enrichment without control:
+          
+          <img width="269" height="769" alt="图片" src="https://github.com/user-attachments/assets/9090167c-4fc4-47a8-91da-12dca50029f1" />
+
+          example: peak enrichment with control:
+
+          <img width="487" height="776" alt="图片" src="https://github.com/user-attachments/assets/48e6e62f-4d5f-484f-9d28-6e327770e9a7" />
+
+      - **`*_peaks.broadPeak` / `*_peaks.narrowPeak` / `*_stringent.bed` / `*_relaxed.bed`**
+
+        - **Content**: Genomic interval files produced by peak-calling pipelines:
+
+        - **Application**:  
+          Each of these files can be loaded into **IGV** or the **UCSC Genome Browser** together with the matched **bigWig track file** for direct, interactive genome-wide visualization of peak regions and signal intensity.
+
+          <img width="957" height="327" alt="图片" src="https://github.com/user-attachments/assets/a8b5b074-4257-4d6e-ae04-edbc110dbcf2" />
+		  
