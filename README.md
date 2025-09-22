@@ -387,6 +387,7 @@ The workflow is fully containerized using Singularity, including all required to
 
         - **Content**: BED6+3 format file (similar to narrowPeak, but without the 10th column for peak summits). Only available when `--broad` is enabled. In broad peak mode, the peak summit isn’t called, so the 5th, 7th–9th columns are the mean values across the peak region. Can be loaded directly into UCSC Genome Browser with `--trackline`.
         - **Columns**:
+
         | Column | Description |
         |--------|-------------|
         | chrom  | Chromosome name |
@@ -405,6 +406,7 @@ The workflow is fully containerized using Singularity, including all required to
 
         - **Content**: BED12+3 format file containing broad regions and narrow peaks within them. Only available when `--broad` is enabled. Can be loaded into UCSC Genome Browser. Columns 5, 7–9 may need adjustment if integrating with narrowPeak conventions.
         - **Columns**:
+
         | Column | Description |
         |--------|-------------|
         | chrom       | Chromosome name |
@@ -429,6 +431,7 @@ The workflow is fully containerized using Singularity, including all required to
 
         - **Content**: Tab-delimited summary of all peaks called by MACS3 with detailed metrics.
         - **Columns**:
+
         | Column | Description |
         |--------|-------------|
         | chr    | Chromosome name |
