@@ -1,0 +1,38 @@
+# Input files (absolute paths)
+oddFq:
+  R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_odd.fastq.gz"
+  #R2:  ""  # optional, leave empty for single-end
+evenFq:
+  R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_even.fastq.gz"
+  #R2:  ""  # optional, leave empty for single-end
+inputFq:
+  R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_input.fastq.gz"
+  #R2:  ""
+
+# Output settings
+prefix: "HeLa"
+outputdir: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/result.snakemake"
+
+# Reference files (absolute paths)
+repeatIndex: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/hg38_repeats/bowtie2_index"  # bowtie2 index prefix
+genomeIndex: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/hg38/bowtie2_index"    # bowtie2 index prefix
+adapterFa: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/illumina_adapter.fa"
+
+# Computational resources
+sif: "/mnt1/2.NAS2024/wutan/9.pipe/2.chip-seq/basement_data/DNAProteinSeq.sif"
+threads: 8
+
+# MACS3 parameters
+binSize: 10
+g: "hs"  # species code: hs, mm, ce, dm
+peaktype: "narrow"  # narrow/broad for MACS3; relaxed/stringent for SEACR
+pval: ""  # override qval if specified
+qval: 0.01
+broad_cutoff: 0.1
+llocal: 100000
+keepdup: "all"
+nomodel: "on"  # on/off
+nolambda: "on"  # on/off
+callsummits: "on"  # on/off
+extsize_val: ""
+shift_val: ""
