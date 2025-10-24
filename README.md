@@ -1,16 +1,14 @@
 # ChIRP-seq-Processing-Pipeline
 This pipeline processes raw ChIRP-seq FASTQ data through sequential steps including adapter trimming, quality control, genome alignment, and peak calling. The workflow supports three input types: odd, even, and optional input control. Repeat-masked sequences are removed prior to alignment. Odd and even datasets are merged and then compared to the input control if available.
 
-# Part I Introduction
-## i. Workflow
+The workflow is fully containerized using Singularity, including all required tools and dependencies. With a single command, raw FASTQ data can be processed through trimming, quality control, alignment, merging, repeat removal, and peak calling in a reproducible manner. Input control is optional; if not provided, peak calling is performed on the merged ChIRP-seq dataset alone.
+
+# Part I Workflow
 Here stands an throughout workflow of data analysis.
 <img width="1016" height="320" alt="ChIRPseq" src="https://github.com/user-attachments/assets/bcbb4ede-e6a4-485d-aacf-1e024876711f" />
 
-## ii. Features
-The workflow is fully containerized using Singularity, including all required tools and dependencies. With a single command, raw FASTQ data can be processed through trimming, quality control, alignment, merging, repeat removal, and peak calling in a reproducible manner. Input control is optional; if not provided, peak calling is performed on the merged ChIRP-seq dataset alone.
-
 # Part II Requirements
-1.  **Recommended System Configuration**:
+1.  **Recommended Specs**:
 
       * 8-core CPU
       * 24 GB RAM
@@ -82,12 +80,12 @@ The workflow is fully containerized using Singularity, including all required to
         singularity -h
         ```
 
-3.  **Download Basement Files**:
+3.  **snakemake**: Snakemake must be installed on your system and requires a Python 3 distribution.
 
-      * `run_ChIRPseq.sh`
-      * `ChIRPseq.sif` (The Singularity container)
-      * `illumina_adapter.fa`
-
+      ```bash
+      pip install snakemake
+      ```
+      
 4.  **Reference Data**: A directory containing Bowtie2 indexes. Below are detailed steps for the human **hg38 genome**. For other reference genomes, download the corresponding files and replace paths as needed.
 
       * 4.1 Repeat Index
@@ -139,74 +137,133 @@ The workflow is fully containerized using Singularity, including all required to
         singularity exec --cleanenv ChIRPseq.sif rm GRCh38.primary_assembly.genome.fa
         ```
 
+3.  **Download Basement Files**:
+
+      * `run_ChIRPseq.sh`
+      * `ChIRPseq.sif` (The Singularity container)
+      * `illumina_adapter.fa`
+
 5.   **Required File Structure**
+
       ```bash
-      basement_data/
-      ├── ChIRPseq.sif
-      ├── hg38/
-            ├── bowtie2_index.1.bt2
-            ├── bowtie2_index.2.bt2
-            ├── bowtie2_index.3.bt2
-            ├── bowtie2_index.4.bt2
-            ├── bowtie2_index.rev.1.bt2
-            └── bowtie2_index.rev.2.bt2
-      ├── hg38_repeats/
-            ├── bowtie2_index.1.bt2
-            ├── bowtie2_index.2.bt2
-            ├── bowtie2_index.3.bt2
-            ├── bowtie2_index.4.bt2
-            ├── bowtie2_index.rev.1.bt2
-            └── bowtie2_index.rev.2.bt2
-      ├── illumina_adapter.fa
-      ├── run_ChIRPseq.sh
-      └── repeats.hg38.unique.fa
+      project_directory/
+      ├── Scripts
+            ├── config.yaml
+            └── ChripSeq.smk
+      ├── Containers/
+            └── ChIRPseq.sif
+      ├── References/
+            ├── illumina_adapter.fa
+            ├── hg38
+                  ├── bowtie2_index.1.ebwt
+                  ├── bowtie2_index.2.ebwt
+                  ├── bowtie2_index.3.ebwt
+                  ├── bowtie2_index.4.ebwt
+                  ├── bowtie2_index.rev.1.ebwt
+                  └── bowtie2_index.rev.2.ebwt
+            └── hg38_repeats
+                  ├── bowtie2_index.1.ebwt
+                  ├── bowtie2_index.2.ebwt
+                  ├── bowtie2_index.3.ebwt
+                  ├── bowtie2_index.4.ebwt
+                  ├── bowtie2_index.rev.1.ebwt
+                  └── bowtie2_index.rev.2.ebwt
       ```
+      
+      - **ChripSeq.smk** — The main Snakemake workflow script.  
+      - **config.yaml** — Configuration file containing paths, parameters, and sample information.  
+        ⚠️ Must be located in the same directory as `ChripSeq.smk`.
+      - **ChIRPseq.sif** — Singularity container image with all required software and dependencies pre-installed.
+      - **illumina_adapter.fa** — FASTA file containing Illumina adapter sequences; replace with your own if needed. 
+      - **hg38** — Reference genome index for Bowtie; replace with your preferred reference.
+      - **hg38_repeats** — Reference repeats index for Bowtie; replace with your preferred reference.
 
 # Part III Running
 
    * **Example code for ChIRP-seq**
 
-      ```bash
-      bash ./basement_data/run_ChIRPseq.sh \
-                --oddFq /path_to_rawdata/HeLa_Terc_odd.fastq.gz \
-                --evenFq /path_to_rawdata/HeLa_Terc_even.fastq.gz \
-                --inputFq /path_to_rawdata/HeLa_Terc_input.fastq.gz \
-                --prefix HeLa_Terc \
-                --outputdir ./result \
-                --repeatIndex ./basement_data/hg38_repeats/bowtie2_index \
-                --genomeIndex ./basement_data/hg38/bowtie2_index \
-                --adapterFa ./basement_data/illumina_adapter.fa \
-                --sif ./basement_data/DNAProteinSeq.sif \
-                --threads 8 \
-                --binSize 10 --g hs
-      ```
+      * **Step 1: Edit `config.yaml`**
+
+        ```bash
+        # Input files
+        oddFq:
+          R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_odd.fastq.gz"
+          R2:  ""
+        evenFq:
+          R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_even.fastq.gz"
+          R2:  ""
+        inputFq:
+          R1:  "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/rawdata/HeLa_Terc_1w_input.fastq.gz"
+          R2:  ""
+
+        # Output settings
+        prefix: "HeLa_Terc"
+        outputdir: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/result.snakemake"
+
+        # Reference files
+        repeatIndex: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/hg38_repeats/bowtie2_index"
+        genomeIndex: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/hg38/bowtie2_index"
+        adapterFa: "/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data/illumina_adapter.fa"
+
+        # Computational resources
+        sif: "/mnt1/2.NAS2024/wutan/9.pipe/2.chip-seq/basement_data/DNAProteinSeq.sif"
+        threads: 8
+
+        # MACS3 parameters
+        binSize: 10
+        g: "hs"
+        peaktype: "narrow"
+        pval: ""  # override qval if specified
+        qval: 0.01
+        broad_cutoff: 0.1
+        llocal: 100000
+        keepdup: "all"
+        nomodel: "on"
+        nolambda: "on"
+        callsummits: "on"
+        extsize_val: ""
+        shift_val: ""
+        ```
+
+      * **Step 2: run snakemake**
+
+        ```bash
+        snakemake -s ChripSeq.smk --use-singularity  --cores 8 --singularity-args "--bind /project_directory:/project_directory"
+        ```
       
    * **Command Parameters**
 
-      - `--evenFq`:             (required) The path(s) to the even FASTQ file(s)
-      - `--oddFq`:              (required) The path(s) to the odd FASTQ file(s)
-      - `--inputFq`:            (optinal) The path(s) to the input FASTQ file(s)
-      - `--prefix`:             (optinal) A prefix name of output files()
-      - `--outputdir`:          (required) Path to the directory where the output will be stored
-      - `--repeatIndex`:        (required) Path to the directory where bowtie reference build with prefix
-      - `--genomeIndex`:        (required) Path to the directory where bowtie reference build with prefix
-      - `--adapterFa`:          (required) Path to the adapter fasta
-      - `--sif`:                (required) Path to the singularity environment file
-      - `--threads`:            (optional) Number of threads to use (default: 8)
-      - `--binSize`:            (optional) Number of binsize to use (default: 10)
-      - `--peakcalling`:        (optional) Number of binsize to use (default: 10)
-      - `--g`:                  (optional) provide the species code accepted by MACS3, for example: `hs` (human), `mm` (mouse), `ce` (C. elegans), `dm` (Drosophila melanogaster), etc.
-      - `--peaktype`:           (optional) For MACS3, set `broad` or `narrow` (default: `narrow`)
-      - `--pval`:               (optional) For MACS3, P-value cutoff for peak calling to determine significance of narrow/strong peaks. If specified, MACS3 uses p-value instead of q-value
-      - `--qval`:               (optional) For MACS3, Q-value (FDR) cutoff for narrow/strong peaks, controlling false discovery rate (default: 0.01)
-      - `--broad_cutoff`:       (optional) For MACS3, P-value or q-value cutoff for broad/weak peaks, effective only when `--peaktype` is `broad` (default: 0.1)
-      - `--llocal`:             (optional) For MACS3, `--llocal` value for samples without input control (default: 100000)
-      - `--keepdup`:            (optional) For MACS3, `--keep-dup` setting (default: `all`)
-      - `--nomodel`:            (optional) For MACS3, Disable model building, set `on` or `off` (default: `on`)
-      - `--nolambda`:           (optional) For MACS3, Disable dynamic lambda, set `on` or `off` (default: `on`)
-      - `--callsummits`:        (optional) For MACS3, Enable calling of peak summits within enriched regions, set `on` or `off` (default: `on`)
-      - `--extsize_val`:        (optional) For MACS3, Set fragment/extension size for MACS3 in base pairs, effective only when `--nomodel` is `on`
-      - `--shift_val`:          (optional) For MACS3, Set shift for read 5' ends in base pairs for MACS3, effective only when `--nomodel` is `on`; positive moves 5'->3', negative moves 3'->5'
+      **edit `config.yaml`**
+      - `oddFq`:              (required) The path(s) to the odd FASTQ file(s)
+      - `evenFq`:             (required) The path(s) to the even FASTQ file(s)
+      - `inputFq`:            (optinal) The path(s) to the input FASTQ file(s)
+      - `prefix`:             (optinal) A prefix name of output files()
+      - `outputdir`:          (required) Path to the directory where the output will be stored
+      - `repeatIndex`:        (required) Path to the directory where bowtie reference build with prefix
+      - `genomeIndex`:        (required) Path to the directory where bowtie reference build with prefix
+      - `adapterFa`:          (required) Path to the adapter fasta
+      - `sif`:                (required) Path to the singularity environment file
+      - `threads`:            (optional) Number of threads to use (default: 8)
+      - `binSize`:            (optional) Number of binsize to use (default: 10)
+      - `peakcalling`:        (optional) Number of binsize to use (default: 10)
+      - `g`:                  (optional) provide the species code accepted by MACS3, for example: `hs` (human), `mm` (mouse), `ce` (C. elegans), `dm` (Drosophila melanogaster), etc.
+      - `peaktype`:           (optional) For MACS3, set `broad` or `narrow` (default: `narrow`)
+      - `pval`:               (optional) For MACS3, P-value cutoff for peak calling to determine significance of narrow/strong peaks. If specified, MACS3 uses p-value instead of q-value
+      - `qval`:               (optional) For MACS3, Q-value (FDR) cutoff for narrow/strong peaks, controlling false discovery rate (default: 0.01)
+      - `broad_cutoff`:       (optional) For MACS3, P-value or q-value cutoff for broad/weak peaks, effective only when `--peaktype` is `broad` (default: 0.1)
+      - `llocal`:             (optional) For MACS3, `--llocal` value for samples without input control (default: 100000)
+      - `keepdup`:            (optional) For MACS3, `--keep-dup` setting (default: `all`)
+      - `nomodel`:            (optional) For MACS3, Disable model building, set `on` or `off` (default: `on`)
+      - `nolambda`:           (optional) For MACS3, Disable dynamic lambda, set `on` or `off` (default: `on`)
+      - `callsummits`:        (optional) For MACS3, Enable calling of peak summits within enriched regions, set `on` or `off` (default: `on`)
+      - `extsize_val`:        (optional) For MACS3, Set fragment/extension size for MACS3 in base pairs, effective only when `--nomodel` is `on`
+      - `shift_val`:          (optional) For MACS3, Set shift for read 5' ends in base pairs for MACS3, effective only when `--nomodel` is `on`; positive moves 5'->3', negative moves 3'->5'
+
+      **run snakemake**
+      - `--use-singularity`: Enables execution of rules within a Singularity container to ensure a fully reproducible environment.
+      - `--singularity-args`: Allows passing additional arguments to the Singularity runtime (e.g., `--bind`, `--nv`, or custom options).
+      - `--cores`: Specifies the maximum number of CPU cores (threads) that Snakemake can use in parallel when executing workflow rules.
+      - `--bind`: Specifies the directories to be mounted within the Singularity container. Include all required paths such as raw data, scripts, container images, and references. The format is `/project_directory:/project_directory`. Multiple directories can be mounted by separating them with commas, for example: `/path1:/path1,/path2:/path2` (required)
 
 # Part IV Output
 
@@ -220,39 +277,53 @@ The workflow is fully containerized using Singularity, including all required to
             ├── HeLa_Terc.even.flagstat.txt
             ├── HeLa_Terc.even.markdup.log
             ├── HeLa_Terc.even.repeats.bowtie.stats
-            ├── HeLa_Terc.even_repeat.bam
             ├── HeLa_Terc.input.bowtie.stats
             ├── HeLa_Terc.input.DeDup.bam
             ├── HeLa_Terc.input.DeDup.bam.bai
             ├── HeLa_Terc.input.flagstat.txt
             ├── HeLa_Terc.input.markdup.log
             ├── HeLa_Terc.input.repeats.bowtie.stats
-            ├── HeLa_Terc.input_repeat.bam
             ├── HeLa_Terc.odd.bowtie.stats
             ├── HeLa_Terc.odd.DeDup.bam
             ├── HeLa_Terc.odd.DeDup.bam.bai
             ├── HeLa_Terc.odd.flagstat.txt
             ├── HeLa_Terc.odd.markdup.log
-            ├── HeLa_Terc.odd.repeats.bowtie.stats
-            └── HeLa_Terc.odd_repeat.bam
+            └── HeLa_Terc.odd.repeats.bowtie.stats
       ├── bw/
             ├── HeLa_Terc.even.DeDup.bw
             ├── HeLa_Terc.input.DeDup.bw
             ├── HeLa_Terc.merged.DeDup.bw
             └── HeLa_Terc.odd.DeDup.bw
       ├── figure/
-            ├── HeLa_Terc.peak.pdf
-            ├── fingerprints.pdf
             ├── BW_compare_PCA.pdf
-            └── BW_compare_cor.pdf
-      ├── peak/
-            ├── HeLa_Terc.merged.vs.HeLa_Terc.input.macs3.stats
-            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.narrowPeak
-            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.xls
-            └── HeLa_Terc.merged.vs.HeLa_Terc.input_summits.bed
+            ├── BW_compare_cor.pdf
+            ├── fingerprints.pdf
+            └── HeLa_Terc.peak.pdf
       ├── multiqc/
             ├── multiqc_data/
             └── multiqc_report.html
+      ├── peak/
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.narrowPeak
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_peaks.xls
+            ├── HeLa_Terc.merged.vs.HeLa_Terc.input_summits.bed
+            └── peakcalling.log
+      ├── rawdata.qc/
+            ├── HeLa_Terc_1w_even_fastqc.html
+            ├── HeLa_Terc_1w_even_fastqc.zip
+            ├── HeLa_Terc_1w_input_fastqc.html
+            ├── HeLa_Terc_1w_input_fastqc.zip
+            ├── HeLa_Terc_1w_odd_fastqc.html
+            └── HeLa_Terc_1w_odd_fastqc.zip
+      ├── trim/
+            ├── HeLa_Terc.even_trimmed_fastqc.html
+            ├── HeLa_Terc.even_trimmed_fastqc.zip
+            ├── HeLa_Terc.input_trimmed_fastqc.html
+            ├── HeLa_Terc.input_trimmed_fastqc.zip
+            ├── HeLa_Terc.odd_trimmed_fastqc.html
+            ├── HeLa_Terc.odd_trimmed_fastqc.zip
+            ├── HeLa_Terc_1w_even.fastq.gz_trimming_report.txt
+            ├── HeLa_Terc_1w_input.fastq.gz_trimming_report.txt
+            └── HeLa_Terc_1w_odd.fastq.gz_trimming_report.txt
       ```
 
    * **Output Interpretation**
@@ -356,7 +427,7 @@ The workflow is fully containerized using Singularity, including all required to
 
           <img width="923" height="708" alt="图片" src="https://github.com/user-attachments/assets/5961fc2d-de94-4433-b669-b69fe109a651" />
 
-      - **`*..macs3.stats`**
+      - **`*peakcalling.log`**
 
         - **Content**: Contains summary statistics from MACS3 peak calling, including number of input reads, effective genome size, estimated fragment size, number of peaks called, and other runtime information.
         - **Application**: Used to check if MACS3 ran successfully and to detect any errors or warnings during the peak calling process.
