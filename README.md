@@ -137,12 +137,6 @@ Here stands an throughout workflow of data analysis.
         singularity exec --cleanenv ChIRPseq.sif rm GRCh38.primary_assembly.genome.fa
         ```
 
-3.  **Download Basement Files**:
-
-      * `run_ChIRPseq.sh`
-      * `ChIRPseq.sif` (The Singularity container)
-      * `illumina_adapter.fa`
-
 5.   **Required File Structure**
 
       ```bash
