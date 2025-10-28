@@ -418,7 +418,7 @@ Here stands an throughout workflow of data analysis.
         - **Content**: PDF file showing a heatmap of pairwise correlations between samples based on BigWig signal profiles. It typically includes correlation values (Pearson) and visually represents sample similarity across the genome.
         - **Application**: Used to assess consistency and reproducibility between samples, identify outliers, and evaluate experimental quality in End-seq.
 
-          <img width="783" height="787" alt="图片" src="https://github.com/user-attachments/assets/ce07afc6-544f-4573-a5cc-141023185cd1" />
+          <img width="862" height="768" alt="图片" src="https://github.com/user-attachments/assets/c5903d2f-6167-4a05-983e-84f937cf1838" />
 
       - **`*fingerprints.pdf`**
 
