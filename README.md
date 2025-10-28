@@ -265,24 +265,24 @@ Here stands an throughout workflow of data analysis.
       ```bash
       result_chip_histone /
       ├── bam/
-            ├── HeLa_Terc.even.bowtie.stats
+            ├── HeLa_Terc.even.genome.stats
             ├── HeLa_Terc.even.DeDup.bam
             ├── HeLa_Terc.even.DeDup.bam.bai
             ├── HeLa_Terc.even.flagstat.txt
             ├── HeLa_Terc.even.markdup.log
-            ├── HeLa_Terc.even.repeats.bowtie.stats
-            ├── HeLa_Terc.input.bowtie.stats
+            ├── HeLa_Terc.even.repeats.stats
+            ├── HeLa_Terc.input.genome.stats
             ├── HeLa_Terc.input.DeDup.bam
             ├── HeLa_Terc.input.DeDup.bam.bai
             ├── HeLa_Terc.input.flagstat.txt
             ├── HeLa_Terc.input.markdup.log
-            ├── HeLa_Terc.input.repeats.bowtie.stats
-            ├── HeLa_Terc.odd.bowtie.stats
+            ├── HeLa_Terc.input.repeats.stats
+            ├── HeLa_Terc.odd.genome.stats
             ├── HeLa_Terc.odd.DeDup.bam
             ├── HeLa_Terc.odd.DeDup.bam.bai
             ├── HeLa_Terc.odd.flagstat.txt
             ├── HeLa_Terc.odd.markdup.log
-            └── HeLa_Terc.odd.repeats.bowtie.stats
+            └── HeLa_Terc.odd.repeats.stats
       ├── bw/
             ├── HeLa_Terc.even.DeDup.bw
             ├── HeLa_Terc.input.DeDup.bw
