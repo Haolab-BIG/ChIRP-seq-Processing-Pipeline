@@ -322,7 +322,7 @@ Here stands an throughout workflow of data analysis.
 
    * **Output Interpretation**
 
-      - **`*.repeats.bowtie.stats`**
+      - **`*.repeats.stats`**
         - **Content**: Bowtie alignment summary when reads are mapped **to the repeat reference database**. Reports total reads processed, reads aligned to repeats (unique/multiple), unaligned reads, and overall alignment rate.
 
         - **Application**:  
@@ -332,7 +332,7 @@ Here stands an throughout workflow of data analysis.
 
           <img width="1589" height="516" alt="图片" src="https://github.com/user-attachments/assets/654b8289-0b5a-4e10-a544-e0063dc40e91" />
 
-      - **`*.bowtie.stats`**
+      - **`*.genome.stats`**
 
         - **Content**: Bowtie alignment summary when reads are mapped **to the reference genome**. Includes total reads processed, uniquely mapped reads, multi-mapped reads, unaligned reads, and overall alignment rate.
         - **Application**:
