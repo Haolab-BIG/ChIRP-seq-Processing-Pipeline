@@ -325,23 +325,24 @@ Here stands an throughout workflow of data analysis.
       - **`*.repeats.stats`**
         - **Content**: Bowtie alignment summary when reads are mapped **to the repeat reference database**. Reports total reads processed, reads aligned to repeats (unique/multiple), unaligned reads, and overall alignment rate.
 
+          <img width="357" height="136" alt="图片" src="https://github.com/user-attachments/assets/1033a12e-7631-4154-8b3a-903593a67a61" />
+
         - **Application**:  
           - Evaluates the **repeat-removal step**.  
           - **Desired outcome**: a **higher percentage of unmapped reads** indicates that most sequencing reads are *not* repeats and can proceed to genome alignment.  
           - Useful for checking repeat content and filtering efficiency; results were aggregated with **MultiQC**.
 
-          <img width="357" height="136" alt="图片" src="https://github.com/user-attachments/assets/1033a12e-7631-4154-8b3a-903593a67a61" />
-
       - **`*.genome.stats`**
 
         - **Content**: Bowtie alignment summary when reads are mapped **to the reference genome**. Includes total reads processed, uniquely mapped reads, multi-mapped reads, unaligned reads, and overall alignment rate.
+
+          <img width="353" height="167" alt="图片" src="https://github.com/user-attachments/assets/74f616e0-cb0e-4983-94d3-8c70a9e58579" />
+
         - **Application**:
           - Assesses **final genome alignment quality**.  
           - **Desired outcome**: a **high proportion of uniquely mapped reads** reflects good library quality and accurate genome mapping.  
           - Helps identify low-quality libraries or alignment issues and were visualized with **MultiQC**.
           
-          <img width="353" height="167" alt="图片" src="https://github.com/user-attachments/assets/74f616e0-cb0e-4983-94d3-8c70a9e58579" />
-
       - **`*.DeDup.bam`**
 
         - **Content**: This is the main alignment file in Binary Alignment Map (BAM) format. It contains all the sequencing reads and their mapping coordinates on the reference genome. This version has had duplicate reads (PCR duplicates) removed. For more information please refer to: https://genome.ucsc.edu/goldenpath/help/bam.html.
