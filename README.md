@@ -382,19 +382,19 @@ Here stands an throughout workflow of data analysis.
 	  
           <img width="1592" height="512" alt="图片" src="https://github.com/user-attachments/assets/37078704-dd2a-4dc9-bb6a-7dc1d6dd2a58" />
 
-        - **FastQC**: Quality-control metrics on raw and trimmed reads, including 'Sequence Counts', 'Sequence Quality Histograms', 'Per Sequence Quality Scores', 'Per Base Sequence Content', 'Per Sequence GC Content', 'Per Base N Content', 'Sequence Length Distribution', 'Sequence Duplication Levels', 'Overrepresented sequences by sample', 'Top overrepresented sequences', 'Adapter Content':
+        - **FastQC**: Quality-control metrics on trimmed reads, including 'Sequence Counts', 'Sequence Quality Histograms', 'Per Sequence Quality Scores', 'Per Base Sequence Content', 'Per Sequence GC Content', 'Per Base N Content', 'Sequence Length Distribution', 'Sequence Duplication Levels', 'Overrepresented sequences by sample', 'Top overrepresented sequences', 'Adapter Content':
     
           - Sequence counts for each sample. Estimate duplicate read counts:
 
             <img width="1595" height="557" alt="图片" src="https://github.com/user-attachments/assets/594acb6e-313c-4661-909b-bea2624e133b" />
 
-          - Sequence Quality Histograms: The mean quality value across each base position in the read.
+          - Sequence Quality Histograms: The mean quality value across each base position in the trimmed read.
 	  
-            <img width="1591" height="619" alt="图片" src="https://github.com/user-attachments/assets/f21ef97e-74c1-45f5-8453-33756c3a6e43" />
+            <img width="1589" height="617" alt="图片" src="https://github.com/user-attachments/assets/64afbccb-93af-46f7-9a6f-9ae5f40001b8" />
 
           - Adapter Content: The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.
 	  
-            <img width="1586" height="613" alt="图片" src="https://github.com/user-attachments/assets/7a660c29-6dd4-4b60-ae01-6ecbbd8c0ede" />
+            <img width="1592" height="619" alt="图片" src="https://github.com/user-attachments/assets/fe02a5ee-8da1-43c2-a63e-49afd472e73c" />
 
         - **Samtools**: This module parses the output from samtools flagstat to report the percentage of total, mapped, and properly paired reads, providing a summary of alignment quality. Helps evaluate the effectiveness of deduplication and ensures that downstream analyses (e.g., peak calling, coverage profiling) are based on unique, non-redundant reads. (as shown in **`*.flagstat.txt`**)
 	  
