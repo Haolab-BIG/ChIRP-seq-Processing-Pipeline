@@ -380,7 +380,7 @@ Here stands an throughout workflow of data analysis.
 
         - **General Statistics**: A combined table summarizing important metrics for each sample:
 	  
-          <img width="1592" height="512" alt="图片" src="https://github.com/user-attachments/assets/37078704-dd2a-4dc9-bb6a-7dc1d6dd2a58" />
+          <img width="1591" height="490" alt="图片" src="https://github.com/user-attachments/assets/9cc15d6f-af83-4779-8319-5793f108dc8c" />
 
         - **FastQC**: Quality-control metrics on trimmed reads, including 'Sequence Counts', 'Sequence Quality Histograms', 'Per Sequence Quality Scores', 'Per Base Sequence Content', 'Per Sequence GC Content', 'Per Base N Content', 'Sequence Length Distribution', 'Sequence Duplication Levels', 'Overrepresented sequences by sample', 'Top overrepresented sequences', 'Adapter Content':
     
