@@ -330,7 +330,7 @@ Here stands an throughout workflow of data analysis.
           - **Desired outcome**: a **higher percentage of unmapped reads** indicates that most sequencing reads are *not* repeats and can proceed to genome alignment.  
           - Useful for checking repeat content and filtering efficiency; results were aggregated with **MultiQC**.
 
-          <img width="1589" height="516" alt="图片" src="https://github.com/user-attachments/assets/654b8289-0b5a-4e10-a544-e0063dc40e91" />
+          <img width="357" height="136" alt="图片" src="https://github.com/user-attachments/assets/1033a12e-7631-4154-8b3a-903593a67a61" />
 
       - **`*.genome.stats`**
 
@@ -340,7 +340,7 @@ Here stands an throughout workflow of data analysis.
           - **Desired outcome**: a **high proportion of uniquely mapped reads** reflects good library quality and accurate genome mapping.  
           - Helps identify low-quality libraries or alignment issues and were visualized with **MultiQC**.
           
-          <img width="1589" height="508" alt="图片" src="https://github.com/user-attachments/assets/0120f2e6-1560-4035-9682-372ba1600d60" />
+          <img width="353" height="167" alt="图片" src="https://github.com/user-attachments/assets/74f616e0-cb0e-4983-94d3-8c70a9e58579" />
 
       - **`*.DeDup.bam`**
 
@@ -398,7 +398,9 @@ Here stands an throughout workflow of data analysis.
 
         - **Samtools**: This module parses the output from samtools flagstat to report the percentage of total, mapped, and properly paired reads, providing a summary of alignment quality. Helps evaluate the effectiveness of deduplication and ensures that downstream analyses (e.g., peak calling, coverage profiling) are based on unique, non-redundant reads. (as shown in **`*.flagstat.txt`**)
 	  
-        - **Bowtie**: Alignment statistics such as total reads, uniquely mapped reads, and multi-mapping rates (as shown in **`*.bowtie.stats`** and **`*.repeats.bowtie.stats`**)
+        - **Bowtie**: Alignment statistics such as total reads, uniquely mapped reads, and multi-mapping rates.
+
+            <img width="1593" height="521" alt="图片" src="https://github.com/user-attachments/assets/246d653d-d03e-4ccd-bef5-cdaf9566ba51" />
 
       - **`*BW_compare_PCA.pdf`**
 
