@@ -92,27 +92,27 @@ Here stands an throughout workflow of data analysis.
 
         ```bash
         # Set base directory
-        basementdir=/mnt1/2.NAS2024/wutan/9.pipe/3.chrip-seq/basement_data
-        cd $basementdir
+        mkdir References
+        cd References
 
-        # Download repeats from UCSC Table Browser and move to $basementdir (as shown in followed picture)
-        singularity exec --cleanenv ChIRPseq.sif gunzip $basementdir/repeats.hg38.fa.gz
+        # Download repeats from UCSC Table Browser and move to References (as shown in followed picture)
+        singularity exec --cleanenv ChIRPseq.sif gunzip repeats.hg38.fa.gz
 
         # Remove spaces from headers to avoid duplicate names
         singularity exec --cleanenv ChIRPseq.sif awk '/^>/{gsub(/ /,"_"); print; next} {print}' repeats.hg38.fa > repeats.hg38.unique.fa
         singularity exec --cleanenv ChIRPseq.sif rm repeats.hg38.fa
         
         # Build Bowtie2 index for repeats
-        singularity exec --cleanenv ChIRPseq.sif mkdir -p ${basementdir}/hg38_repeats
-        singularity exec --cleanenv ChIRPseq.sif bowtie2-build --threads 8 -f ${basementdir}/repeats.hg38.unique.fa ${basementdir}/hg38_repeats/bowtie2_index
+        singularity exec --cleanenv ChIRPseq.sif mkdir -p hg38_repeats
+        singularity exec --cleanenv ChIRPseq.sif bowtie2-build --threads 8 -f ${References}/repeats.hg38.unique.fa hg38_repeats/bowtie2_index
         ```
       
         <img width="806" height="589" alt="图片" src="https://github.com/user-attachments/assets/bd554377-e831-4532-9911-61773c4ed0fd" />
 
         * 4.2 genome index
         ```bash
-        mkdir basement_data
-        cd basement_data
+        mkdir References
+        cd References
 
         # Download Genome FASTA
         singularity exec --cleanenv ChIRPseq.sif wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/GRCh38.primary_assembly.genome.fa.gz
@@ -127,10 +127,6 @@ Here stands an throughout workflow of data analysis.
         # Build index
         singularity exec --cleanenv ChIRPseq.sif mkdir hg38
         singularity exec --cleanenv ChIRPseq.sif bowtie2-build --threads 8 -f GRCh38.primary_assembly.genome.chr.fa ./hg38/bowtie2_index
-
-        # get chromatin size (only used when you select SEACR as the peak calling method)
-        singularity exec --cleanenv ChIRPseq.sif samtools faidx GRCh38.primary_assembly.genome.chr.fa
-        singularity exec --cleanenv ChIRPseq.sif cut -f1,2 GRCh38.primary_assembly.genome.chr.fa.fai > chromatin.size
 
         # Remove unnecessary files
         singularity exec --cleanenv ChIRPseq.sif rm GRCh38.primary_assembly.genome.chr.fa
